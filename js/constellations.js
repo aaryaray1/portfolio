@@ -404,6 +404,49 @@ const CONSTELLATIONS = (() => {
         return connections;
     }
 
+    // Letter / "wacky" inspired shapes
+    function buildWShapeConnections() {
+        const idx = (i) => ((i % count) + count) % count;
+        const order = [0, 2, 1, 3, 2, 4].map(idx);
+        const connections = [];
+        for (let i = 0; i < order.length - 1; i++) {
+            connections.push([order[i], order[i + 1]]);
+        }
+        return connections;
+    }
+
+    function buildMShapeConnections() {
+        const idx = (i) => ((i % count) + count) % count;
+        const order = [0, 3, 1, 4].map(idx);
+        const connections = [];
+        for (let i = 0; i < order.length - 1; i++) {
+            connections.push([order[i], order[i + 1]]);
+        }
+        return connections;
+    }
+
+    function buildZigZagConnections() {
+        const connections = [];
+        for (let i = 0; i < count - 1; i++) {
+            connections.push([i, i + 1]);
+            if (i + 2 < count) {
+                connections.push([i, i + 2]);
+            }
+        }
+        return connections;
+    }
+
+    function buildArcConnections() {
+        const connections = [];
+        for (let i = 0; i < count - 1; i++) {
+            connections.push([i, i + 1]);
+        }
+        for (let i = 0; i < count - 2; i++) {
+            connections.push([i, i + 2]);
+        }
+        return connections;
+    }
+
     const patterns = [];
 
     patterns.push({
@@ -462,6 +505,85 @@ const CONSTELLATIONS = (() => {
         connections: buildWebConnections()
     });
 
+    // Extra rich patterns for more visual variety
+    patterns.push({
+        name: 'Radiant Web',
+        description: '',
+        stars: buildStars(),
+        connections: [
+            ...buildWebConnections(),
+            ...buildStarConnections()
+        ]
+    });
+
+    patterns.push({
+        name: 'Halo Circuit',
+        description: '',
+        stars: buildStars(),
+        connections: [
+            ...buildLoopConnections(),
+            ...buildRandomConnections()
+        ]
+    });
+
+    patterns.push({
+        name: 'Twin Clusters',
+        description: '',
+        stars: buildStars(),
+        connections: [
+            ...buildClusterConnections(),
+            ...buildWebConnections()
+        ]
+    });
+
+    patterns.push({
+        name: 'Spiral Weave',
+        description: '',
+        stars: buildStars(),
+        connections: [
+            ...buildSpiralConnections(),
+            ...buildRandomConnections()
+        ]
+    });
+
+    patterns.push({
+        name: 'Crown Pattern',
+        description: '',
+        stars: buildStars(),
+        connections: [
+            ...buildStarConnections(),
+            ...buildLoopConnections()
+        ]
+    });
+
+    patterns.push({
+        name: 'W Shape',
+        description: '',
+        stars: buildStars(),
+        connections: buildWShapeConnections()
+    });
+
+    patterns.push({
+        name: 'M Shape',
+        description: '',
+        stars: buildStars(),
+        connections: buildMShapeConnections()
+    });
+
+    patterns.push({
+        name: 'Zig-Zag',
+        description: '',
+        stars: buildStars(),
+        connections: buildZigZagConnections()
+    });
+
+    patterns.push({
+        name: 'Arc Web',
+        description: '',
+        stars: buildStars(),
+        connections: buildArcConnections()
+    });
+
     return patterns;
 })();
 
@@ -490,6 +612,46 @@ function renderConstellation(constellation, svg) {
 
     if (!constellation.stars || constellation.stars.length === 0) {
         return;
+    }
+
+    // Helper to enforce that each star has between 1 and maxDegree connections
+    function enforceDegreeBounds(connections, nodeCount, maxDegree = 2) {
+        const conns = connections ? [...connections] : [];
+        const degree = new Array(nodeCount).fill(0);
+
+        conns.forEach(([a, b]) => {
+            if (a >= 0 && a < nodeCount) degree[a]++;
+            if (b >= 0 && b < nodeCount) degree[b]++;
+        });
+
+        // Ensure every node has at least one connection
+        for (let i = 0; i < nodeCount; i++) {
+            if (degree[i] === 0 && nodeCount > 1) {
+                const j = (i + 1) % nodeCount;
+                conns.push([i, j]);
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+
+        // Gently prune connections so no node exceeds maxDegree,
+        // without ever dropping any node below degree 1.
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let idx = 0; idx < conns.length; idx++) {
+                const [a, b] = conns[idx];
+                if ((degree[a] > maxDegree || degree[b] > maxDegree) && degree[a] > 1 && degree[b] > 1) {
+                    conns.splice(idx, 1);
+                    degree[a]--;
+                    degree[b]--;
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        return conns;
     }
 
     // Compute bounding box of the raw star coordinates
@@ -525,12 +687,20 @@ function renderConstellation(constellation, svg) {
         ty: star.y * scale + offsetY
     }));
 
+    // Ensure every star participates in at least one connection,
+    // and no star has more than two connections.
+    const ensuredConnections = enforceDegreeBounds(
+        constellation.connections || [],
+        transformedStars.length,
+        2
+    );
+
     // Create a group for lines
     const linesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     linesGroup.setAttribute('class', 'constellation-lines');
 
     // Draw connections (lines between stars)
-    constellation.connections.forEach((connection, idx) => {
+    ensuredConnections.forEach((connection, idx) => {
         const [starIndex1, starIndex2] = connection;
         const star1 = transformedStars[starIndex1];
         const star2 = transformedStars[starIndex2];

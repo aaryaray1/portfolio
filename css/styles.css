@@ -25,14 +25,9 @@ body {
     position: relative;
 }
 
-/* Top navigation bar */
+/* Top navigation bar (hidden per design) */
 .navbar {
-    position: relative;
-    z-index: 60;
-    padding: 1.1rem 3rem;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(3, 3, 10, 0.9));
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
+    display: none;
 }
 
 .nav-content {
@@ -48,11 +43,12 @@ body {
     font-weight: 600;
     letter-spacing: 1px;
     color: var(--light-purple);
+    display: none;
 }
 
 .nav-links {
     list-style: none;
-    display: flex;
+    display: none;
     gap: 2rem;
 }
 
@@ -80,7 +76,7 @@ body {
 /* Black hole home link */
 .black-hole-home {
     position: fixed;
-    top: 1.2rem;
+    top: 2.8rem;
     left: 4rem;
     width: 46px;
     height: 46px;
@@ -90,16 +86,16 @@ body {
         radial-gradient(circle at 50% 50%, rgba(20,20,30,1) 0%, rgba(0,0,0,1) 45%, transparent 70%),
         radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.35) 0%, transparent 55%);
     box-shadow:
-        0 0 18px rgba(157, 78, 221, 0.7),
-        0 0 40px rgba(0, 0, 0, 0.9);
+        0 0 26px rgba(194, 191, 240, 0.9),
+        0 0 55px rgba(0, 0, 0, 1);
     z-index: 80;
     cursor: pointer;
-    transition: transform 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+    transition: none;
     opacity: 0.95;
+    transform-origin: center center;
 }
 
 .black-hole-home:hover {
-    transform: scale(1.08) rotate(8deg);
     box-shadow:
         0 0 26px rgba(194, 191, 240, 0.9),
         0 0 55px rgba(0, 0, 0, 1);
@@ -123,6 +119,27 @@ body {
         0 0 34px rgba(157,78,221,0.65);
     opacity: 0.75;
     pointer-events: none;
+    animation: accretionSpin 16s linear infinite;
+}
+
+.black-hole-home::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 72px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid rgba(194, 191, 240, 0.45);
+    box-shadow:
+        0 0 24px rgba(194, 191, 240, 0.5),
+        0 0 60px rgba(157, 78, 221, 0.55);
+    opacity: 0.45;
+    filter: blur(1px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: accretionHalo 22s linear infinite;
 }
 
 /* Animated background stars - subtle and scattered */
@@ -250,13 +267,13 @@ body {
 .constellation-container {
     position: relative;
     z-index: 50;
-    min-height: 100vh;
+    min-height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    padding: 4.5rem 2rem 3rem;
-    margin-top: -80px; /* pull gradient up slightly behind the navbar */
+    padding: 3.5rem 2rem 2.5rem;
+    margin-top: 0; /* navbar removed, align section naturally */
     text-align: center;
     overflow: hidden;
     background: radial-gradient(circle at 50% 10%, rgba(106, 71, 170, 0.22), rgba(0, 0, 0, 1) 60%),
@@ -365,8 +382,8 @@ body {
 }
 
 #constellationCanvas {
-    width: 90%;
-    max-width: 125%;
+    width: 80%;
+    max-width: 950px;
     height: auto;
     filter: drop-shadow(0 0 40px rgba(194, 191, 240, 0.5)) drop-shadow(0 0 80px rgba(154, 78, 221, 0.3));
     animation: fadeInUp 1.2s ease-out 0.2s backwards, canvasGlow 4s ease-in-out infinite;
@@ -510,7 +527,6 @@ body {
 .about-header {
     text-align: center;
     margin-bottom: 3rem;
-    animation: fadeInDown 0.8s ease-out;
 }
 
 .about-header h2 {
@@ -527,7 +543,6 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
-    animation: fadeInUp 0.8s ease-out 0.2s backwards;
 }
 
 .about-text h3 {
@@ -544,11 +559,18 @@ body {
 }
 
 .skills-section {
-    background: rgba(31, 36, 33, 0.96);
+    position: relative;
     padding: 2rem;
-    border-radius: 10px;
-    border: 1px solid rgba(194, 191, 240, 0.4);
-    backdrop-filter: blur(5px);
+    border-radius: 14px;
+    border: 1px solid rgba(194, 191, 240, 0.55);
+    background:
+        radial-gradient(circle at 20% 0%, rgba(230, 220, 255, 0.22), transparent 55%),
+        radial-gradient(circle at 80% 100%, rgba(157, 78, 221, 0.24), transparent 65%),
+        rgba(12, 8, 30, 0.68);
+    backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:
+        0 0 20px rgba(194, 191, 240, 0.26),
+        0 22px 55px rgba(0, 0, 0, 0.9);
 }
 
 .skills-section h4 {
@@ -614,6 +636,78 @@ body {
     }
 }
 
+@keyframes accretionSpin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes accretionHalo {
+    0% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 0.4;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05) rotate(-180deg);
+        opacity: 0.65;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(-360deg);
+        opacity: 0.4;
+    }
+}
+
+@keyframes shimmerBorder {
+    0% {
+        transform: rotate(0deg);
+        opacity: 0.35;
+    }
+    50% {
+        transform: rotate(180deg);
+        opacity: 0.6;
+    }
+    100% {
+        transform: rotate(360deg);
+        opacity: 0.35;
+    }
+}
+
+@keyframes auroraDrift {
+    0% {
+        transform: translateX(-4%) translateY(0) skewX(-6deg);
+        opacity: 0.7;
+    }
+    50% {
+        transform: translateX(5%) translateY(3%) skewX(0deg);
+        opacity: 0.95;
+    }
+    100% {
+        transform: translateX(-2%) translateY(1%) skewX(5deg);
+        opacity: 0.8;
+    }
+}
+
+@keyframes auroraRibbon {
+    0% {
+        transform: translateX(-8%) translateY(2%) skewX(-8deg);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translateX(6%) translateY(0) skewX(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-4%) translateY(3%) skewX(7deg);
+        opacity: 0.85;
+    }
+}
+
 /* Page with starfield background and shooting stars */
 .page-with-stars {
     background: linear-gradient(135deg, rgba(106, 71, 170, 0.015), #000000, rgba(157, 78, 221, 0.01)) !important;
@@ -627,6 +721,14 @@ body {
 
 .page-sucked .black-hole-home {
     animation: blackHoleToCenter 1.1s ease-in-out forwards;
+}
+
+.page-sucked .black-hole-home::before {
+    animation: accretionSpin 4s linear infinite;
+}
+
+.page-sucked .black-hole-home::after {
+    animation: accretionHalo 5s linear infinite;
 }
 
 .page-sucked .navbar,
@@ -679,17 +781,17 @@ body {
 
 @keyframes blackHoleToCenter {
     0% {
-        top: 1.2rem;
+        top: 2.8rem;
         left: 4rem;
         transform: translate(0, 0) scale(1) rotate(0deg);
         box-shadow:
             0 0 18px rgba(157, 78, 221, 0.7),
             0 0 40px rgba(0, 0, 0, 0.9);
     }
-    60% {
+    55% {
         top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(1.7) rotate(140deg);
+        left: 4rem;
+        transform: translate(0, -50%) scale(1.7) rotate(140deg);
     }
     100% {
         top: 50%;
@@ -970,17 +1072,45 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .navbar {
+        padding: 0.85rem 1.25rem;
+    }
+
+    .nav-content {
+        max-width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .nav-links {
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .black-hole-home {
+        top: 0.9rem;
+        left: 1.1rem;
+        width: 38px;
+        height: 38px;
+    }
+
     .hero-text h1 {
         font-size: 2rem;
     }
 
-    .nav-links {
-        gap: 1rem;
-        font-size: 0.9rem;
+    .about-container {
+        padding: 2.5rem 1.5rem;
     }
 
     .about-content {
         grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .skills-section {
+        margin-top: 1rem;
     }
 
     .constellation-container {
@@ -1000,5 +1130,47 @@ body {
 
     .logo {
         font-size: 1.2rem;
+    }
+
+    .footer {
+        padding: 1.5rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 1.7rem;
+        letter-spacing: 1px;
+    }
+
+    .hero-text p {
+        font-size: 0.95rem;
+    }
+
+    .logo {
+        font-size: 1.05rem;
+    }
+
+    .nav-links {
+        gap: 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    #constellationCanvas,
+    #projectsConstellation {
+        width: 110%;
+    }
+
+    .about-header h2 {
+        font-size: 2.1rem;
+    }
+
+    .about-text p {
+        font-size: 0.95rem;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 }

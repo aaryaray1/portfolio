@@ -110,14 +110,120 @@ function initProjectConstellation() {
         return connections;
     }
 
+    function buildLetterShapeConnections() {
+        const idx = (i) => ((i % count) + count) % count;
+        const order = [0, 2, 1, 3, 2, 4].map(idx);
+        const connections = [];
+        for (let i = 0; i < order.length - 1; i++) {
+            connections.push([order[i], order[i + 1]]);
+        }
+        return connections;
+    }
+
+    function buildZigZagConnections() {
+        const connections = [];
+        for (let i = 0; i < count - 1; i++) {
+            connections.push([i, i + 1]);
+            if (i + 2 < count) connections.push([i, i + 2]);
+        }
+        return connections;
+    }
+
+    function buildRandomConnections() {
+        const connections = [];
+        for (let i = 0; i < count - 1; i++) {
+            connections.push([i, i + 1]);
+        }
+        // add a few random cross links
+        for (let k = 0; k < Math.max(2, Math.floor(count / 2)); k++) {
+            const a = Math.floor(Math.random() * count);
+            let b = Math.floor(Math.random() * count);
+            if (a === b) b = (b + 1) % count;
+            connections.push([a, b]);
+        }
+        return connections;
+    }
+
+    function buildClusterConnections() {
+        const connections = [];
+        const mid = Math.floor(count / 2);
+        for (let i = 0; i < mid - 1; i++) {
+            connections.push([i, i + 1]);
+        }
+        for (let i = mid; i < count - 1; i++) {
+            connections.push([i, i + 1]);
+        }
+        if (count > 3) connections.push([0, mid]);
+        return connections;
+    }
+
+    function buildSpiralConnections() {
+        const connections = [];
+        for (let i = 0; i < count - 2; i++) {
+            connections.push([i, i + 2]);
+        }
+        return connections;
+    }
+
+    function enforceDegreeBounds(connections, nodeCount, maxDegree = 2) {
+        const conns = connections ? [...connections] : [];
+        const degree = new Array(nodeCount).fill(0);
+
+        conns.forEach(([a, b]) => {
+            if (a >= 0 && a < nodeCount) degree[a]++;
+            if (b >= 0 && b < nodeCount) degree[b]++;
+        });
+
+        // Ensure every node has at least one connection
+        for (let i = 0; i < nodeCount; i++) {
+            if (degree[i] === 0 && nodeCount > 1) {
+                const j = (i + 1) % nodeCount;
+                conns.push([i, j]);
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+
+        // Prune connections so no node exceeds maxDegree,
+        // without dropping any node below degree 1.
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let idx = 0; idx < conns.length; idx++) {
+                const [a, b] = conns[idx];
+                if ((degree[a] > maxDegree || degree[b] > maxDegree) && degree[a] > 1 && degree[b] > 1) {
+                    conns.splice(idx, 1);
+                    degree[a]--;
+                    degree[b]--;
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        return conns;
+    }
+
     const patterns = [
         buildLoopConnections(),
-        buildStarConnections(),
-        buildWebConnections()
+        buildWebConnections(),
+        buildRandomConnections(),
+        buildClusterConnections(),
+        buildSpiralConnections(),
+        buildLetterShapeConnections(),
+        buildZigZagConnections(),
+        // dense halo pattern combining several styles, but without the high-degree star hub
+        (() => {
+            const base = buildLoopConnections();
+            return base.concat(buildWebConnections());
+        })()
     ];
-    const connections = patterns[Math.floor(Math.random() * patterns.length)];
+    let connections = patterns[Math.floor(Math.random() * patterns.length)];
 
-    renderProjectConstellation(svg, stars, connections);
+    // Ensure every project star is connected, but with at most two connections per star
+    const boundedConnections = enforceDegreeBounds(connections, stars.length, 2);
+
+    renderProjectConstellation(svg, stars, boundedConnections);
 }
 
 // Render the projects constellation as SVG with the same star/label style as the homepage
